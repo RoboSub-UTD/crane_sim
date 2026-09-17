@@ -131,18 +131,21 @@ namespace Sim.Sensors.Zed {
 
         private Camera SpawnEye(string eyeName, float xOffset, RenderTexture target) {
             var go = new GameObject(eyeName);
-            go.transform.SetParent(rigOrigin, false);
-            go.transform.localPosition = new Vector3(xOffset, 0f, 0f);
-            go.transform.localRotation = Quaternion.identity;
-
             var cam = go.AddComponent<Camera>();
             var hdData = go.AddComponent<HDAdditionalCameraData>();
             if (leftCamera != null) {
                 // Both eyes must render identically (exposure, AA, culling...) or stereo matching suffers.
+                // Camera.CopyFrom also moves this transform onto the left camera, so the eye is
+                // placed afterwards; doing it before collapses the baseline to zero and the SDK
+                // then stereo-matches the left image against itself.
                 cam.CopyFrom(leftCamera);
                 var leftHd = leftCamera.GetComponent<HDAdditionalCameraData>();
                 if (leftHd != null) leftHd.CopyTo(hdData);
             }
+
+            go.transform.SetParent(rigOrigin, false);
+            go.transform.localPosition = new Vector3(xOffset, 0f, 0f);
+            go.transform.localRotation = Quaternion.identity;
             return ConfigureEye(cam, target);
         }
 
