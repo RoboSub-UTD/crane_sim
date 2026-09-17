@@ -28,8 +28,8 @@ the ZED Isaac Sim extension uses. The SDK computes depth from the stereo pair, s
 depth, point cloud, IMU) exactly as on the boat. Nothing ZED-related is published from Unity directly.
 
 Notes:
-- The SDK's virtual camera pool has no ZED 2 entry, so the camera identifies as a **ZED 2i** (same
-  optics, 120 mm baseline and IMU; launch the wrapper with `camera_model:=zed2i`, or `zed2` and accept a warning).
+- The virtual serial pool is labelled ZED 2i, but the SDK reports the opened camera as a **ZED 2**
+  (serial 20976320, same optics/120 mm baseline/IMU), so launch the wrapper with `camera_model:=zed2`.
 - Rendering defaults to HD720 @ 30 fps (`ZedSimCamera` inspector: resolution, lens, fps, port, serial).
 - Requires an NVIDIA GPU (the stream is H.265 via NVENC).
 
@@ -40,8 +40,13 @@ Setup on the Unity host:
 
 On the ROS side (see the `zed-sim` service in the `roboboat-docker` repo):
 ```bash
-ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i camera_name:=zed \
+ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2 camera_name:=zed \
   sim_mode:=true sim_address:=127.0.0.1 sim_port:=30000 use_sim_time:=true
 ```
+Verified: the wrapper opens the stream, reports fx 529.8 @ 1280x720 in `camera_info`, and publishes
+rectified images + NEURAL depth (~10 Hz on an RTX 3050). Known wrapper quirks in sim mode (IMU topic
+sporadic, `CORRUPTED FRAME` warnings) are listed in the roboboat-docker README.
+- Only one process can own UDP port 30000 on the host: if another streamer (or a stale Unity session)
+  holds it, `ZedSimCamera` logs `init_streamer failed` and disables itself until the next Play.
 `use_sim_time` consumes the `/clock` published by the `SimClock` object, so ZED stamps line up with
 the other simulated sensors. Docker containers must use `network_mode: host` (the stream is RTP/UDP).
