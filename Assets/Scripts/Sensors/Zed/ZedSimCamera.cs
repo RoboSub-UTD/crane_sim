@@ -133,7 +133,13 @@ namespace Sim.Sensors.Zed {
             go.transform.localRotation = Quaternion.identity;
 
             var cam = go.AddComponent<Camera>();
-            go.AddComponent<HDAdditionalCameraData>();
+            var hdData = go.AddComponent<HDAdditionalCameraData>();
+            if (leftCamera != null) {
+                // Both eyes must render identically (exposure, AA, culling...) or stereo matching suffers.
+                cam.CopyFrom(leftCamera);
+                var leftHd = leftCamera.GetComponent<HDAdditionalCameraData>();
+                if (leftHd != null) leftHd.CopyTo(hdData);
+            }
             return ConfigureEye(cam, target);
         }
 
