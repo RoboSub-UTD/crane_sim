@@ -45,7 +45,9 @@ namespace Sim.Sensors.Zed {
         [Tooltip("Also push IMU samples every physics step through ingest_imu (angular velocity included). Experimental; the per-frame IMU is always sent.")]
         [SerializeField] private bool ingestHighRateImu = false;
 
-        private const int StreamerId = 0;
+        // One id per rig instance; the native registry lives for the whole editor process.
+        private static int nextStreamerId;
+        private int StreamerId;
         private const int SlotCount = 3;
 
         private ZedCameraSpecs.Spec spec;
@@ -86,6 +88,7 @@ namespace Sim.Sensors.Zed {
         private bool stopping;
 
         private void Awake() {
+            StreamerId = nextStreamerId++;
             spec = ZedCameraSpecs.Get(resolution, lens);
 
             var ab = GetComponentInParent<ArticulationBody>();
@@ -198,7 +201,16 @@ namespace Sim.Sensors.Zed {
             p.verbose = (byte)(verboseStreamer ? 1 : 0);
 
             int result = ZedSimNative.InitStreamer(StreamerId, ref p);
+            if (result == -1) {
+                // The id is still registered from an earlier session in this editor process
+                // (e.g. a crash, or a failed init): dispose it and retry once.
+                ZedSimNative.CloseStreamer(StreamerId);
+                result = ZedSimNative.InitStreamer(StreamerId, ref p);
+            }
             if (result != 1) {
+                // libsl_zed keeps the registration even when the RTP session fails (zed-isaac-sim #57);
+                // release it or every later init in this process reports the id as in use.
+                ZedSimNative.CloseStreamer(StreamerId);
                 Debug.LogError($"ZedSimCamera: init_streamer failed: {ZedSimNative.DescribeInitResult(result)}");
                 enabled = false;
                 return;
