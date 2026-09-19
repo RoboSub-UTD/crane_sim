@@ -58,7 +58,7 @@
         "{[^A]**,?[^s]**,??[^s]**,???[^e]**,????[^t]**,?????[^s]**}/": true,
         "*/{[^S]**,?[^c]**,??[^r]**,???[^i]**,????[^p]**,?????[^t]**,??????[^s]**}/": true
     },
-    "dotnet.defaultSolution": "crane_sim.sln",
+    "dotnet.defaultSolution": "crane_sim.slnx",
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "ms-dotnettools.csdevkit",
     "editor.suggest.showReferences": true,
