@@ -199,7 +199,10 @@ namespace Sim.Sensors.Zed {
             p.fps = fps;
             p.port = port;
             p.serialNumber = serial;
-            p.inputFormat = ZedSimNative.InputFormat.RGB;
+            // Buffer bytes are genuinely R,G,B,A (AsyncGPUReadback converts to RGBA32 explicitly),
+            // but libsl_zed's INPUT_FORMAT enum isn't vendored here to check our RGB/BGR mapping
+            // against, so this value is unverified against the real header.
+            p.inputFormat = ZedSimNative.InputFormat.BGR;
             p.bitrateKbps = bitrateKbps > 0 ? bitrateKbps : ZedCameraSpecs.DefaultBitrateKbps(resolution);
             p.verbose = (byte)(verboseStreamer ? 1 : 0);
 
