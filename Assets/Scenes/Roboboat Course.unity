@@ -2457,16 +2457,6 @@ PrefabInstance:
       propertyPath: m_ParentAnchorRotation.z
       value: 0.7071069
       objectReference: {fileID: 0}
-    - target: {fileID: 122967543639509790, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
-        type: 3}
-      propertyPath: topicName
-      value: /front_camera/rgb/image
-      objectReference: {fileID: 0}
-    - target: {fileID: 122967543639509790, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
-        type: 3}
-      propertyPath: rgbRenderTexture
-      value: 
-      objectReference: {fileID: 8400000, guid: edcd97a8adf9d9a4a9bae5ff41fa20c7, type: 2}
     - target: {fileID: 1692203147813252169, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
         type: 3}
       propertyPath: m_LinearDamping
@@ -3122,11 +3112,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4025038214280494272, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
-        type: 3}
-      propertyPath: topicName
-      value: /front_camera/camera_info
-      objectReference: {fileID: 0}
     - target: {fileID: 4099754592230002701, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
         type: 3}
       propertyPath: m_Enabled
@@ -3252,16 +3237,6 @@ PrefabInstance:
       propertyPath: waterSurface
       value: 
       objectReference: {fileID: 1550251302}
-    - target: {fileID: 4400172706351399178, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
-        type: 3}
-      propertyPath: topicName
-      value: /front_camera/depth/image
-      objectReference: {fileID: 0}
-    - target: {fileID: 4400172706351399178, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
-        type: 3}
-      propertyPath: depthRenderTexture
-      value: 
-      objectReference: {fileID: 8400000, guid: 53de5ec294fbae041ad325683dfe6bca, type: 2}
     - target: {fileID: 4654933847591499625, guid: 7e4588ccb09a0db18a4b0596fb9bca42,
         type: 3}
       propertyPath: m_CenterOfMass.y

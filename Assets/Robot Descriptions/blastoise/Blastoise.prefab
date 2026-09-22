@@ -4446,7 +4446,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4693042776900118673}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d77e831c11d024bbe8b15953d3d910b0, type: 3}
   m_Name: 
@@ -4916,12 +4916,8 @@ GameObject:
   - component: {fileID: 2722623985953601437}
   - component: {fileID: 7919007779277469791}
   - component: {fileID: 4173455216965524439}
-  - component: {fileID: 4025038214280494272}
-  - component: {fileID: 7804433559628881899}
-  - component: {fileID: 3256144980719966680}
-  - component: {fileID: 122967543639509790}
-  - component: {fileID: 4400172706351399178}
   - component: {fileID: 3133999688409307359}
+  - component: {fileID: 4271350967731102918}
   m_Layer: 0
   m_Name: front_camera_link
   m_TagString: Untagged
@@ -5060,108 +5056,6 @@ MonoBehaviour:
   jointName: front_camera_joint
   EffortLimit: 1000
   VelocityLimit: 1000
---- !u!114 &4025038214280494272
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5937371456924922527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7176e5b19304af4abef5f25ebc64ee0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Vision.CameraInfo
-  topicName: camera/camera_info
-  frameId: front_camera_link
-  Hz: 5
-  sensorCamera: {fileID: 7252236208909801342}
---- !u!114 &7804433559628881899
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5937371456924922527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 252e063020d674d42a4706b92513941f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Vision.ProcessRenderTexture
-  sensorType: 0
-  inputRenderTexture: {fileID: 8400000, guid: 9f5e8a649754a6243baf61f0c90b3c8c, type: 2}
-  normalsRenderTexture: {fileID: 8400000, guid: 6b1cfb535279b0449ac0e5e1a263a284,
-    type: 2}
-  outputRenderTexture: {fileID: 8400000, guid: edcd97a8adf9d9a4a9bae5ff41fa20c7, type: 2}
-  drawFrustum: 0
-  sensorCamera: {fileID: 7252236208909801342}
-  flatNoise: 0
-  depthAngleNoiseGain: 0
-  K1: 0
-  K2: 0
-  K3: 0
-  T1: 0
-  T2: 0
---- !u!114 &3256144980719966680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5937371456924922527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 252e063020d674d42a4706b92513941f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Vision.ProcessRenderTexture
-  sensorType: 1
-  inputRenderTexture: {fileID: 8400000, guid: d33415c87b3d5ac4eb2fd138cfd0a98c, type: 2}
-  normalsRenderTexture: {fileID: 8400000, guid: 6b1cfb535279b0449ac0e5e1a263a284,
-    type: 2}
-  outputRenderTexture: {fileID: 8400000, guid: 53de5ec294fbae041ad325683dfe6bca, type: 2}
-  drawFrustum: 0
-  sensorCamera: {fileID: 7252236208909801342}
-  flatNoise: 0
-  depthAngleNoiseGain: 0
-  K1: 0
-  K2: 0
-  K3: 0
-  T1: 0
-  T2: 0
---- !u!114 &122967543639509790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5937371456924922527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39b063bdbfddfeb6e9d6190309aa998f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Vision.ROSCameraAsync
-  rgbRenderTexture: {fileID: 8400000, guid: 9f5e8a649754a6243baf61f0c90b3c8c, type: 2}
-  sensorCamera: {fileID: 7252236208909801342}
-  topicName: camera/image_raw
-  frameId: front_camera_link
-  Hz: 15
---- !u!114 &4400172706351399178
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5937371456924922527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38c48939e0b5d868c9d2dcd3f1dc5380, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Vision.ROSDepthCameraAsync
-  depthRenderTexture: {fileID: 8400000, guid: d33415c87b3d5ac4eb2fd138cfd0a98c, type: 2}
-  sensorCamera: {fileID: 7252236208909801342}
-  topicName: camera/depth
-  frameId: front_camera_link
-  Hz: 15
 --- !u!114 &3133999688409307359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5189,6 +5083,31 @@ MonoBehaviour:
     id: red_pole_buoy
   - obj: {fileID: 0}
     id: red_pole_buoy
+--- !u!114 &4271350967731102918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5937371456924922527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387007b577354f7bbd37b75663bf78d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.Zed.ZedSimCamera
+  leftCamera: {fileID: 7252236208909801342}
+  rigOrigin: {fileID: 0}
+  resolution: 2
+  lens: 0
+  fps: 30
+  nearClip: 0.3
+  farClip: 1000
+  flipVertically: 1
+  port: 30000
+  serialNumber: 0
+  bitrateKbps: 0
+  verboseStreamer: 0
+  ingestHighRateImu: 0
 --- !u!1 &6382777769473952513
 GameObject:
   m_ObjectHideFlags: 0
@@ -5723,7 +5642,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6845916185526941729}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ea4339cbf971ef49821d367c0176a97, type: 3}
   m_Name: 

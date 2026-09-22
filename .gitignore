@@ -101,3 +101,9 @@ UserSettings/EditorUserSettings.asset
 UserSettings/Layouts/default-2023.dwlt
 ProjectSettings/TimeManager.asset
 ProjectSettings/DynamicsManager.asset
+
+# Stereolabs simulation streamer (downloaded via Tools > ZED Sim > Install streamer library)
+Assets/Plugins/x86_64/libsl_zed.so
+Assets/Plugins/x86_64/libsl_zed.so.meta
+Assets/Plugins/x86_64/sl_zed64.dll
+Assets/Plugins/x86_64/sl_zed64.dll.meta
