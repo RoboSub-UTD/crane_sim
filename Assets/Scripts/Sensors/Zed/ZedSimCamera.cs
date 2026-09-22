@@ -9,8 +9,8 @@ using Sim.Utils;
 
 namespace Sim.Sensors.Zed {
     /// <summary>
-    /// Simulated ZED 2 (identifies as ZED 2i) that streams a rectified stereo pair plus IMU into the
-    /// real ZED SDK through Stereolabs' simulation streamer. Nothing is published to ROS from here:
+    /// Simulated ZED 2i that streams a rectified stereo pair plus IMU into the real ZED SDK through
+    /// Stereolabs' simulation streamer. Nothing is published to ROS from here:
     /// run zed-ros2-wrapper with <c>sim_mode:=true</c> against this machine and it produces the
     /// usual /zed/zed_node/... topics (images, SDK-computed depth, IMU).
     ///

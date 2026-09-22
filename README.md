@@ -19,17 +19,18 @@ Finally, make sure you have selected the correct scene from `Assets/Scenes` and 
 
 The simulator has been build with customizability and modularity in mind, all physics scripts can be easily adapted in the `Assets/Scripts` folder. Importing URDFs can also be easily done by right clicking the hierarchy and selecting `3D Object > URDF Model (Import)`. 
 
-## Simulated ZED 2 (ZED SDK simulation mode)
+## Simulated ZED 2i (ZED SDK simulation mode)
 
-Blastoise carries a virtual ZED 2 (`ZedSimCamera` on `front_camera_link`) that streams a rectified
+Blastoise carries a virtual ZED 2i (`ZedSimCamera` on `front_camera_link`) that streams a rectified
 stereo pair and IMU into the real ZED SDK using Stereolabs' simulation streamer, the same mechanism
 the ZED Isaac Sim extension uses. The SDK computes depth from the stereo pair, so
 `zed-ros2-wrapper` in `sim_mode` publishes the usual `/zed/zed_node/...` topics (rectified images,
 depth, point cloud, IMU) exactly as on the boat. Nothing ZED-related is published from Unity directly.
 
 Notes:
-- The virtual serial pool is labelled ZED 2i, but the SDK reports the opened camera as a **ZED 2**
-  (serial 20976320, same optics/120 mm baseline/IMU), so launch the wrapper with `camera_model:=zed2`.
+- The camera comes from the SDK's virtual serial pool as a **ZED 2i** (model 3, wide lens, serial
+  20976320, 120 mm baseline), so launch the wrapper with `camera_model:=zed2i`. If the SDK reports a
+  different model for the opened stream the wrapper only warns; it still runs.
 - Rendering defaults to HD720 @ 30 fps (`ZedSimCamera` inspector: resolution, lens, fps, port, serial).
 - Requires an NVIDIA GPU (the stream is H.265 via NVENC).
 
@@ -40,7 +41,7 @@ Setup on the Unity host:
 
 On the ROS side (see the `zed-sim` service in the `roboboat-docker` repo):
 ```bash
-ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2 camera_name:=zed \
+ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i camera_name:=zed \
   sim_mode:=true sim_address:=127.0.0.1 sim_port:=30000 use_sim_time:=true
 ```
 Verified: the wrapper opens the stream, reports fx 529.8 @ 1280x720 in `camera_info`, and publishes

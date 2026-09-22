@@ -10,7 +10,7 @@ namespace Sim.Sensors.Zed {
     /// these exactly, otherwise the SDK's rectification/depth is wrong.
     /// </summary>
     public static class ZedCameraSpecs {
-        /// <summary>sl::MODEL code the SDK's virtual serial pool uses for the ZED 2i (there is no ZED 2 entry).</summary>
+        /// <summary>sl::MODEL code the SDK's virtual serial pool uses for the ZED 2i.</summary>
         public const int Zed2iModelId = 3;
 
         /// <summary>Distance between the two optical centres, metres.</summary>
