@@ -1920,6 +1920,7 @@ GameObject:
   - component: {fileID: 6659781381358495525}
   - component: {fileID: 8276555061911205369}
   - component: {fileID: 8331884704071894688}
+  - component: {fileID: 5518920341176330264}
   m_Layer: 0
   m_Name: Blastoise
   m_TagString: robot
@@ -1927,6 +1928,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &5518920341176330264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2192760388070078231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4632fef66f564eebb6dd66cb4a1f9567, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.TransformTreePublisher
+  topicName: /tf
+  Hz: 50
+  baseFrameId: base_link
+  baseLink: {fileID: 8763587276732716985}
+  baseFrameRotation: {x: 0, y: -90, z: 0}
+  publishOdom: 1
+  odomFrameId: odom
+  sensorFrames:
+  - frameId: imu_link
+    source: {fileID: 4441030106483710704}
+  - frameId: gps_link
+    source: {fileID: 8609486237206330500}
+  - frameId: lidar_link
+    source: {fileID: 4981493672561120323}
+  - frameId: front_camera_link
+    source: {fileID: 1124875459242486217}
+  zedCamera: {fileID: 4271350967731102918}
+  zedCameraName: zed
 --- !u!4 &6659781381358495525
 Transform:
   m_ObjectHideFlags: 0
