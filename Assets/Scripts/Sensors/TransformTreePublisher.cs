@@ -9,10 +9,10 @@ using Sim.Utils.ROS;
 
 namespace Sim.Sensors {
     /// <summary>
-    /// Publishes the robot's TF tree (REP-105) on /tf:
-    ///   odom -> base_link                 simulator ground truth (optional)
+    /// Publishes the robot's TF tree (REP-105) below base_link on /tf:
     ///   base_link -> sensor frames        one per <see cref="sensorFrames"/> entry (imu_link, gps_link, ...)
     ///   base_link -> zed_camera_link      root of the static tree zed-ros2-wrapper publishes itself
+    /// odom -> base_link is deliberately not published here; the state estimator owns it.
     ///
     /// Every frame is read from the live Unity transforms with the same RUF -> FLU conversion the
     /// sensors apply to their data, so the tree always agrees with what the sensors report. Each
@@ -41,12 +41,6 @@ namespace Sim.Sensors {
                  "the bow along its local -X, hence (0, -90, 0).")]
         [SerializeField] private Vector3 baseFrameRotation = new Vector3(0f, -90f, 0f);
 
-        [Header("Odometry")]
-        [Tooltip("Publish odom -> base_link from ground truth (odom = Unity world origin, same axes as the " +
-                 "Imu/Odom sensors' world frame). Turn off once a state estimator publishes it instead.")]
-        [SerializeField] private bool publishOdom = true;
-        [SerializeField] private string odomFrameId = "odom";
-
         [Header("Sensors")]
         [SerializeField] private List<SensorFrame> sensorFrames = new();
         [Tooltip("Attaches the zed-ros2-wrapper tree: base_link -> <zedCameraName>_camera_link.")]
@@ -66,12 +60,9 @@ namespace Sim.Sensors {
         }
 
         public TFMessageMsg CreateMessage() {
-            var transforms = new List<TransformStampedMsg>(sensorFrames.Count + 2);
+            var transforms = new List<TransformStampedMsg>(sensorFrames.Count + 1);
             Quaternion baseRot = baseLink.rotation * Quaternion.Euler(baseFrameRotation);
             Vector3 basePos = baseLink.position;
-
-            if (publishOdom)
-                transforms.Add(Stamped(odomFrameId, baseFrameId, new TransformMsg(basePos.To<FLU>(), baseRot.To<FLU>())));
 
             foreach (SensorFrame sensor in sensorFrames) {
                 if (sensor.source == null || string.IsNullOrEmpty(sensor.frameId)) continue;

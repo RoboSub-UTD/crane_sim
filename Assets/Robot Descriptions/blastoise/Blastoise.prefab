@@ -1945,8 +1945,6 @@ MonoBehaviour:
   baseFrameId: base_link
   baseLink: {fileID: 8763587276732716985}
   baseFrameRotation: {x: 0, y: -90, z: 0}
-  publishOdom: 1
-  odomFrameId: odom
   sensorFrames:
   - frameId: imu_link
     source: {fileID: 4441030106483710704}

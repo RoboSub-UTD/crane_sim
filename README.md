@@ -50,8 +50,8 @@ ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i camera_name:=ze
   sim_mode:=true sim_address:=127.0.0.1 sim_port:=30000 use_sim_time:=true \
   publish_tf:=false publish_map_tf:=false
 ```
-(`publish_tf:=false` leaves `odom`/`map` to the simulator: with positional tracking on, the wrapper
-would otherwise publish `odom -> zed_camera_link` and give that frame a second parent, see
+(`publish_tf:=false` leaves `odom`/`map` to the state estimator: with positional tracking on, the
+wrapper would otherwise publish `odom -> zed_camera_link` and give that frame a second parent, see
 [TF tree](#tf-tree).)
 Verified: the wrapper opens the stream, reports fx 529.8 @ 1280x720 in `camera_info`, and publishes
 rectified images + NEURAL depth (~10 Hz on an RTX 3050). Known wrapper quirks in sim mode (IMU topic
@@ -96,21 +96,23 @@ matcher both hit. A constant *ratio* between them is a baseline or focal-length 
 
 ## TF tree
 
-`TransformTreePublisher` (on the `Blastoise` root) publishes the robot's tree on `/tf` at 50 Hz, following
-REP-105 / REP-103 (`base_link`: x out of the bow, y to port, z up):
+`TransformTreePublisher` (on the `Blastoise` root) publishes the robot's tree below `base_link` on
+`/tf` at 50 Hz, following REP-105 / REP-103 (`base_link`: x out of the bow, y to port, z up):
 
 ```
-odom
-└── base_link
-    ├── imu_link            IMU        imu/raw
-    ├── gps_link            GPS        gps/raw
-    ├── lidar_link          lidar      points, scan
-    ├── front_camera_link   /detections (left ZED eye)
-    └── zed_camera_link     published by zed-ros2-wrapper's robot_state_publisher from here down
-        └── zed_camera_center
-            ├── zed_left_camera_frame  → …_optical, zed_imu_link
-            └── zed_right_camera_frame → …_optical
+base_link
+├── imu_link            IMU        imu/raw
+├── gps_link            GPS        gps/raw
+├── lidar_link          lidar      points, scan
+├── front_camera_link   /detections (left ZED eye)
+└── zed_camera_link     published by zed-ros2-wrapper's robot_state_publisher from here down
+    └── zed_camera_center
+        ├── zed_left_camera_frame  → …_optical, zed_imu_link
+        └── zed_right_camera_frame → …_optical
 ```
+
+`odom -> base_link` (and `map -> odom`) are **not** published by the simulator: the state
+estimation pipeline owns them.
 
 - Every frame is read from the live Unity transforms with the same RUF → FLU conversion the sensors
   use for their data, so the tree cannot disagree with what the sensors publish. Blastoise's URDF
@@ -123,8 +125,7 @@ odom
 - Everything, including the fixed mounts, goes on `/tf`: ROS-TCP-Endpoint only creates volatile
   publishers, and tf2 subscribes to `/tf_static` transient-local, so a `/tf_static` sent through the
   bridge is QoS-incompatible and never received.
-- `odom -> base_link` is simulator ground truth (odom = the Unity world origin, in the same axes as
-  the IMU orientation). Untick **Publish Odom** once a state estimator (robot_localization, ZED
-  tracking) publishes it instead.
+- `/detections` poses are in `front_camera_link` (x out of the lens, y left, z up), and box sizes are
+  metric along the box's own x/y/z in the same convention.
 
 Check it with `ros2 run tf2_tools view_frames` or `ros2 run tf2_ros tf2_echo base_link zed_left_camera_frame`.
