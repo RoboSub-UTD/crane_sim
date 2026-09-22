@@ -100,6 +100,23 @@ namespace Sim.Sensors.Zed {
         private Thread worker;
         private bool stopping;
 
+        /// <summary>
+        /// World pose of the centre of the camera body, i.e. the wrapper's zed_camera_center
+        /// (Unity +Z out of the lenses, +Y up). Valid both before and after Awake has slid a reused
+        /// left camera onto the left optical centre.
+        /// </summary>
+        public Pose BodyCentre {
+            get {
+                if (leftCamera != null) {
+                    Transform eye = leftCamera.transform;
+                    Vector3 centre = leftEye != null ? eye.position - eye.rotation * ZedCameraSpecs.LeftEyeOffset : eye.position;
+                    return new Pose(centre, eye.rotation);
+                }
+                Transform origin = rigOrigin != null ? rigOrigin : transform;
+                return new Pose(origin.position, origin.rotation);
+            }
+        }
+
         private void Awake() {
             StreamerId = nextStreamerId++;
             spec = ZedCameraSpecs.Get(resolution, lens);
