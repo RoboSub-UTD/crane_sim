@@ -8,6 +8,13 @@ namespace Sim.Sensors.Zed {
     /// Optical parameters of the virtual ZED 2i that the ZED SDK's built-in simulation calibration
     /// assumes (values mirror the Isaac Sim extension's camera table). The rendered images must match
     /// these exactly, otherwise the SDK's rectification/depth is wrong.
+    ///
+    /// The SDK derives depth from disparity using the calibration it attaches to the virtual serial,
+    /// not from anything the streamer sends, so depth is metric only while the rendered geometry
+    /// agrees with it. Read back from a running wrapper (v5.4.1, HD720, serial 20976320):
+    /// fx = fy = 529.8, cx = 640, cy = 360, zero distortion, and P[3] = -63.576 on the right camera,
+    /// i.e. a baseline of 63.576 / 529.8 = 120.000 mm. <see cref="ZedSimCamera"/> re-checks the rig
+    /// against these numbers at start-up.
     /// </summary>
     public static class ZedCameraSpecs {
         /// <summary>sl::MODEL code the SDK's virtual serial pool uses for the ZED 2i.</summary>
@@ -15,6 +22,21 @@ namespace Sim.Sensors.Zed {
 
         /// <summary>Distance between the two optical centres, metres.</summary>
         public const float Baseline = 0.12f;
+
+        /// <summary>
+        /// How far the optical centres sit behind the centre of the camera body, metres.
+        /// zed-ros2-wrapper's zed_macro.urdf.xacro puts the ZED 2i's left/right camera frames at
+        /// (optical_offset_x, ±baseline/2, 0) = (-0.01, ±0.06, 0) from zed_camera_center; mirroring
+        /// that keeps the simulated cloud in the same place relative to the camera body as on the
+        /// real camera, so the wrapper's static transforms stay true in simulation.
+        /// </summary>
+        public const float OpticalCentreOffset = 0.01f;
+
+        /// <summary>Left optical centre relative to the body centre, in eye axes (X right, Y up, Z forward).</summary>
+        public static Vector3 LeftEyeOffset => new Vector3(-Baseline / 2f, 0f, -OpticalCentreOffset);
+
+        /// <summary>Right optical centre relative to the body centre, in eye axes.</summary>
+        public static Vector3 RightEyeOffset => new Vector3(+Baseline / 2f, 0f, -OpticalCentreOffset);
 
         public struct Spec {
             public int width;

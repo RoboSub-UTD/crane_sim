@@ -14,14 +14,15 @@ namespace Sim.Sensors.Zed {
     /// run zed-ros2-wrapper with <c>sim_mode:=true</c> against this machine and it produces the
     /// usual /zed/zed_node/... topics (images, SDK-computed depth, IMU).
     ///
-    /// Attach to a link on the robot. Either give it an existing <see cref="leftCamera"/> (it becomes
-    /// the left eye, i.e. the SDK's reference frame, and the right eye is spawned 120 mm along its
-    /// local +X) or leave it empty and both eyes are spawned ±baseline/2 around <see cref="rigOrigin"/>.
-    /// Unity +Z of the eye transforms looks out of the lenses, +Y is up.
+    /// Attach to a link on the robot. Either give it an existing <see cref="leftCamera"/> or leave it
+    /// empty and set <see cref="rigOrigin"/>; either way that transform marks the centre of the camera
+    /// body (where the ZED2i mesh sits), and the two eyes are placed on the real camera's optical
+    /// centres around it: ±60 mm along its X and 10 mm behind it. Unity +Z of the eye transforms looks
+    /// out of the lenses, +Y is up.
     /// </summary>
     public class ZedSimCamera : MonoBehaviour {
         [Header("Rig")]
-        [Tooltip("Optional existing camera to use as the left eye (its FOV/clip planes/target are overridden). The right eye is spawned next to it.")]
+        [Tooltip("Optional existing camera to reuse as the left eye (its FOV/clip planes/target are overridden). It is moved onto the left optical centre, so place it at the centre of the camera body.")]
         [SerializeField] private Camera leftCamera;
         [Tooltip("Used only when no left camera is given: centre of the camera body, eyes spawned either side. Defaults to this transform.")]
         [SerializeField] private Transform rigOrigin;
@@ -40,6 +41,11 @@ namespace Sim.Sensors.Zed {
         [Tooltip("0 = pick a default for the resolution.")]
         [SerializeField] private int bitrateKbps = 0;
         [SerializeField] private bool verboseStreamer = false;
+
+        [Header("Depth check")]
+        [Tooltip("Periodically log the true distance to the scene at a few pixels. Compare with the wrapper's depth at the same pixels (Docker/zed/depth_probe.py in roboboat-docker) to confirm the cloud is metric.")]
+        [SerializeField] private bool logGroundTruthDepth = false;
+        [SerializeField, Min(0.1f)] private float groundTruthInterval = 2f;
 
         [Header("IMU")]
         [Tooltip("Also push IMU samples every physics step through ingest_imu (angular velocity included). Experimental; the per-frame IMU is always sent.")]
@@ -64,6 +70,7 @@ namespace Sim.Sensors.Zed {
 
         private bool streamerReady;
         private double lastCaptureTime = double.NegativeInfinity;
+        private double lastGroundTruthTime = double.NegativeInfinity;
         private long epochBaseNs;
         private double simTimeBase;
         private bool timeBaseSet;
@@ -79,6 +86,12 @@ namespace Sim.Sensors.Zed {
             public int pendingReadbacks;
             public bool failed;
         }
+
+        /// <summary>Where <see cref="LogGroundTruthDepth"/> samples, as fractions of the image.</summary>
+        private static readonly Vector2[] ProbePixels = {
+            new Vector2(0.5f, 0.5f), new Vector2(0.25f, 0.5f), new Vector2(0.75f, 0.5f),
+            new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.75f),
+        };
 
         private readonly FrameSlot[] slots = new FrameSlot[SlotCount];
         private readonly Stack<FrameSlot> freeSlots = new();
@@ -103,14 +116,18 @@ namespace Sim.Sensors.Zed {
             rightFlipRT = CreateEyeTexture("zed_right_flip_rt");
 
             if (leftCamera != null) {
-                // Left eye is the SDK's reference frame; the existing camera keeps its transform.
-                rigOrigin = leftCamera.transform;
+                // The given camera marks the body centre, not the left lens: slide it onto the left
+                // optical centre (world space, so no parent scale can shrink the offset) and hang the
+                // right eye off it. The left eye stays the SDK's reference frame.
+                Transform eye = leftCamera.transform;
+                eye.position += eye.rotation * ZedCameraSpecs.LeftEyeOffset;
+                rigOrigin = eye;
                 leftEye = ConfigureEye(leftCamera, leftRT);
-                rightEye = SpawnEye("zed_right_camera", ZedCameraSpecs.Baseline, rightRT);
+                rightEye = SpawnEye("zed_right_camera", new Vector3(ZedCameraSpecs.Baseline, 0f, 0f), rightRT);
             } else {
                 if (rigOrigin == null) rigOrigin = transform;
-                leftEye = SpawnEye("zed_left_camera", -ZedCameraSpecs.Baseline / 2f, leftRT);
-                rightEye = SpawnEye("zed_right_camera", +ZedCameraSpecs.Baseline / 2f, rightRT);
+                leftEye = SpawnEye("zed_left_camera", ZedCameraSpecs.LeftEyeOffset, leftRT);
+                rightEye = SpawnEye("zed_right_camera", ZedCameraSpecs.RightEyeOffset, rightRT);
             }
 
             int bytes = spec.width * spec.height * 4;
@@ -129,7 +146,8 @@ namespace Sim.Sensors.Zed {
             return rt;
         }
 
-        private Camera SpawnEye(string eyeName, float xOffset, RenderTexture target) {
+        /// <summary>Spawns an eye at <paramref name="offset"/> metres from <see cref="rigOrigin"/>, in its axes.</summary>
+        private Camera SpawnEye(string eyeName, Vector3 offset, RenderTexture target) {
             var go = new GameObject(eyeName);
             var cam = go.AddComponent<Camera>();
             var hdData = go.AddComponent<HDAdditionalCameraData>();
@@ -144,10 +162,17 @@ namespace Sim.Sensors.Zed {
             }
 
             go.transform.SetParent(rigOrigin, false);
-            go.transform.localPosition = new Vector3(xOffset, 0f, 0f);
+            // localPosition is in the parent's units: divide out its scale so the baseline stays
+            // metric on a scaled robot. Depth comes straight off the baseline, so a factor here is a
+            // factor on every point in the cloud (the start-up check below catches what slips past).
+            Vector3 scale = rigOrigin.lossyScale;
+            go.transform.localPosition = new Vector3(
+                offset.x / NonZero(scale.x), offset.y / NonZero(scale.y), offset.z / NonZero(scale.z));
             go.transform.localRotation = Quaternion.identity;
             return ConfigureEye(cam, target);
         }
+
+        private static float NonZero(float v) => Mathf.Abs(v) < 1e-6f ? 1e-6f : v;
 
         private Camera ConfigureEye(Camera cam, RenderTexture target) {
             cam.usePhysicalProperties = false;
@@ -155,6 +180,10 @@ namespace Sim.Sensors.Zed {
             cam.nearClipPlane = nearClip;
             cam.farClipPlane = farClip;
             cam.targetTexture = target;
+            // After the target, which would otherwise recompute it: pin the aspect to the sensor's own
+            // so nothing (game view, dynamic resolution) can bend fx away from fy, and with it the
+            // disparity the SDK turns into depth.
+            cam.aspect = (float)spec.width / spec.height;
             cam.allowHDR = true;
             cam.enabled = true;
             return cam;
@@ -181,6 +210,11 @@ namespace Sim.Sensors.Zed {
             Version sdk = ZedSimNative.TryGetRuntimeVersion();
             if (sdk == null) {
                 Debug.LogError("ZedSimCamera: libsl_zed not found. Run Tools ▸ ZED Sim ▸ Install streamer library (and `sudo apt install libturbojpeg` on Linux).");
+                enabled = false;
+                return;
+            }
+
+            if (!VerifyRigMatchesCalibration()) {
                 enabled = false;
                 return;
             }
@@ -224,10 +258,84 @@ namespace Sim.Sensors.Zed {
 
             streamerReady = true;
             stopping = false;
-            Debug.Log($"ZED streamer ready: SDK {sdk}, ZED2i serial {serial}, {spec.width}x{spec.height}@{fps} (fx {spec.fx:F1}, vFOV {spec.VerticalFov:F1}°), port {port}");
+            Debug.Log($"ZED streamer ready: SDK {sdk}, ZED2i serial {serial}, {spec.width}x{spec.height}@{fps} " +
+                $"(fx {spec.fx:F1}, vFOV {spec.VerticalFov:F1}°, baseline {MeasuredBaseline * 1000f:F2} mm), port {port}");
 
             worker = new Thread(WorkerLoop) { Name = "ZedSimStreamer", IsBackground = true };
             worker.Start();
+        }
+
+        private float MeasuredBaseline => Vector3.Distance(leftEye.transform.position, rightEye.transform.position);
+
+        /// <summary>
+        /// Checks the rig against the calibration the SDK has already assigned to this virtual serial.
+        /// Depth is computed from disparity with <i>that</i> calibration, not with anything the
+        /// streamer sends, so a rig that disagrees produces a cloud whose every point is wrong by the
+        /// same factor — silently, and only in the metres, not in the picture. Refuse to stream
+        /// instead of publishing a plausible-looking cloud at the wrong scale.
+        /// </summary>
+        private bool VerifyRigMatchesCalibration() {
+            float baseline = MeasuredBaseline;
+            if (Mathf.Abs(baseline - ZedCameraSpecs.Baseline) > 5e-4f) {
+                Debug.LogError($"ZedSimCamera: the eyes are {baseline * 1000f:F2} mm apart but the SDK calibrates " +
+                    $"this camera at {ZedCameraSpecs.Baseline * 1000f:F2} mm, so every depth would come out scaled " +
+                    $"by {ZedCameraSpecs.Baseline / Mathf.Max(baseline, 1e-6f):F3}. Check the scale on the camera's parents.");
+                return false;
+            }
+
+            // Rectified stereo: the eyes must be parallel and separated along the left eye's +X, or
+            // the SDK matches along the wrong epipolar line and depth degrades or disappears.
+            float twist = Quaternion.Angle(leftEye.transform.rotation, rightEye.transform.rotation);
+            if (twist > 0.01f) {
+                Debug.LogError($"ZedSimCamera: the eyes are toed in by {twist:F3}°; the SDK assumes a rectified pair.");
+                return false;
+            }
+            Vector3 leftToRight = (rightEye.transform.position - leftEye.transform.position).normalized;
+            if (Vector3.Dot(leftToRight, leftEye.transform.right) < 0.9999f) {
+                Debug.LogError("ZedSimCamera: the right eye is not on the left eye's +X axis (rigOrigin rotated?).");
+                return false;
+            }
+
+            return VerifyEyeIntrinsics("left", leftEye) && VerifyEyeIntrinsics("right", rightEye);
+        }
+
+        /// <summary>Reads fx/fy/cx/cy back out of the eye's own projection matrix and compares with the spec.</summary>
+        private bool VerifyEyeIntrinsics(string label, Camera eye) {
+            Matrix4x4 m = eye.projectionMatrix;
+            float fx = 0.5f * spec.width * m.m00;
+            float fy = 0.5f * spec.height * m.m11;
+            float cx = 0.5f * spec.width * (1f - m.m02);
+            float cy = 0.5f * spec.height * (1f - m.m12);
+
+            if (Mathf.Abs(fx - spec.fx) > 0.001f * spec.fx || Mathf.Abs(fy - spec.fx) > 0.001f * spec.fx) {
+                Debug.LogError($"ZedSimCamera: {label} eye renders at fx {fx:F2}, fy {fy:F2}, but the SDK rectifies " +
+                    $"it as fx = fy = {spec.fx:F2}. Depth would scale with the ratio.");
+                return false;
+            }
+            if (Mathf.Abs(cx - spec.width / 2f) > 0.5f || Mathf.Abs(cy - spec.height / 2f) > 0.5f) {
+                Debug.LogError($"ZedSimCamera: {label} eye's principal point is ({cx:F1}, {cy:F1}), not the " +
+                    $"({spec.width / 2f:F1}, {spec.height / 2f:F1}) the SDK assumes (oblique or physical camera?).");
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Logs the true distance to the scene at a few pixels, as the SDK measures it: Z along the
+        /// left eye's optical axis, not range. Compare with depth_registered at the same pixels.
+        /// </summary>
+        private void LogGroundTruthDepth() {
+            var line = new System.Text.StringBuilder("ZED ground-truth Z (metres):");
+            foreach (var uv in ProbePixels) {
+                int u = Mathf.RoundToInt(uv.x * spec.width);
+                int v = Mathf.RoundToInt(uv.y * spec.height);
+                // Image rows run top-down; Unity's screen coordinates start at the bottom left.
+                Ray ray = leftEye.ScreenPointToRay(new Vector3(u + 0.5f, spec.height - 0.5f - v, 0f));
+                line.Append(Physics.Raycast(ray, out RaycastHit hit, farClip)
+                    ? $"  ({u},{v})={Vector3.Dot(hit.point - leftEye.transform.position, leftEye.transform.forward):F3}"
+                    : $"  ({u},{v})=miss");
+            }
+            Debug.Log(line.ToString());
         }
 
         private void FixedUpdate() {
@@ -282,6 +390,12 @@ namespace Sim.Sensors.Zed {
         private void Update() {
             if (!streamerReady) return;
             double now = Time.timeAsDouble;
+
+            if (logGroundTruthDepth && now - lastGroundTruthTime >= groundTruthInterval) {
+                lastGroundTruthTime = now;
+                LogGroundTruthDepth();
+            }
+
             if (now - lastCaptureTime < 1.0 / fps) return;
             lastCaptureTime = now;
 
