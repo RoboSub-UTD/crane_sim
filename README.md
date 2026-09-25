@@ -47,8 +47,12 @@ Setup on the Unity host:
 On the ROS side (see the `zed-sim` service in the `roboboat-docker` repo):
 ```bash
 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i camera_name:=zed \
-  sim_mode:=true sim_address:=127.0.0.1 sim_port:=30000 use_sim_time:=true
+  sim_mode:=true sim_address:=127.0.0.1 sim_port:=30000 use_sim_time:=true \
+  publish_tf:=false publish_map_tf:=false
 ```
+(`publish_tf:=false` leaves `odom`/`map` to the state estimator: with positional tracking on, the
+wrapper would otherwise publish `odom -> zed_camera_link` and give that frame a second parent, see
+[TF tree](#tf-tree).)
 Verified: the wrapper opens the stream, reports fx 529.8 @ 1280x720 in `camera_info`, and publishes
 rectified images + NEURAL depth (~10 Hz on an RTX 3050). Known wrapper quirks in sim mode (IMU topic
 sporadic, `CORRUPTED FRAME` warnings) are listed in the roboboat-docker README.
@@ -89,3 +93,39 @@ docker compose exec zed-sim python3 /root/depth_probe.py
 The two sets of numbers should agree to a few centimetres, on whatever the raycast and the stereo
 matcher both hit. A constant *ratio* between them is a baseline or focal-length mismatch; a constant
 *offset* is a rig-origin mismatch.
+
+## TF tree
+
+`TransformTreePublisher` (on the `Blastoise` root) publishes the robot's tree below `base_link` on
+`/tf` at 50 Hz, following REP-105 / REP-103 (`base_link`: x out of the bow, y to port, z up):
+
+```
+base_link
+├── imu_link            IMU        imu/raw
+├── gps_link            GPS        gps/raw
+├── lidar_link          lidar      points, scan
+├── front_camera_link   /detections (left ZED eye)
+└── zed_camera_link     published by zed-ros2-wrapper's robot_state_publisher from here down
+    └── zed_camera_center
+        ├── zed_left_camera_frame  → …_optical, zed_imu_link
+        └── zed_right_camera_frame → …_optical
+```
+
+`odom -> base_link` (and `map -> odom`) are **not** published by the simulator: the state
+estimation pipeline owns them.
+
+- Every frame is read from the live Unity transforms with the same RUF → FLU conversion the sensors
+  use for their data, so the tree cannot disagree with what the sensors publish. Blastoise's URDF
+  import has the bow along `base_link`'s local −X, which `baseFrameRotation` (0, −90, 0) turns into
+  REP-103. The IMU, GPS and lidar links keep the import's identity rotation, so their x axis points
+  to starboard and they sit at yaw −90° under `base_link`; that is what their data really is.
+- `base_link -> zed_camera_link` is the camera body centre (`ZedSimCamera.BodyCentre`) lowered by
+  the ZED 2i's 15 mm screw offset, so the wrapper's own static tree lands the optical frames on the
+  rendered eyes.
+- Everything, including the fixed mounts, goes on `/tf`: ROS-TCP-Endpoint only creates volatile
+  publishers, and tf2 subscribes to `/tf_static` transient-local, so a `/tf_static` sent through the
+  bridge is QoS-incompatible and never received.
+- `/detections` poses are in `front_camera_link` (x out of the lens, y left, z up), and box sizes are
+  metric along the box's own x/y/z in the same convention.
+
+Check it with `ros2 run tf2_tools view_frames` or `ros2 run tf2_ros tf2_echo base_link zed_left_camera_frame`.

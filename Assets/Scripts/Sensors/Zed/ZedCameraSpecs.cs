@@ -32,6 +32,14 @@ namespace Sim.Sensors.Zed {
         /// </summary>
         public const float OpticalCentreOffset = 0.01f;
 
+        /// <summary>
+        /// Height of zed_camera_center above zed_camera_link (the tripod screw on the bottom of the
+        /// body), metres: the xacro's (0, 0, height/2) with the ZED 2i's height 0.03 and zero
+        /// bottom_slope. zed_camera_link is the root of the wrapper's static TF tree, so it is the
+        /// frame the robot's tree has to attach it by.
+        /// </summary>
+        public const float MountToCentreHeight = 0.015f;
+
         /// <summary>Left optical centre relative to the body centre, in eye axes (X right, Y up, Z forward).</summary>
         public static Vector3 LeftEyeOffset => new Vector3(-Baseline / 2f, 0f, -OpticalCentreOffset);
 

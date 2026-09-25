@@ -1,5 +1,6 @@
 using RosMessageTypes.Vision;
 using RosMessageTypes.Geometry;
+using Unity.Robotics.ROSTCPConnector.ROSGeometry;
 using Sim.Utils.ROS;
 using UnityEngine;
 using System.Collections.Generic;
@@ -11,6 +12,12 @@ namespace Sim.Sensors.Vision {
         public string id;
     }
 
+    /// <summary>
+    /// Publishes ground-truth 3D boxes of the listed objects visible from <see cref="sensorCamera"/>.
+    /// Poses are in <see cref="frameId"/>, which must be the camera's own frame (REP-103: x out of
+    /// the lens, y left, z up); TransformTreePublisher publishes it from the same camera transform.
+    /// Box sizes are metric, along the box's own x/y/z in the same convention.
+    /// </summary>
     public class BoundingBox3D : MonoBehaviour {
         [SerializeField] private string topicName = "/detections";
         [SerializeField] private string frameId = "front_camera_link";
@@ -62,12 +69,10 @@ namespace Sim.Sensors.Vision {
             foreach (var entry in objects) {
                 if (entry.obj == null) continue;
 
-                ComputeLocalBounds(entry.obj, out Vector3 localCenter, out Vector3 size);
+                ComputeBounds(entry.obj, out Vector3 center, out Vector3 size);
 
-                Vector3 worldCenter = entry.obj.transform.TransformPoint(localCenter);
-                Quaternion rotation = entry.obj.transform.rotation;
-
-                DrawBoundingBox(worldCenter, rotation, size);
+                Transform t = entry.obj.transform;
+                DrawBoundingBox(t.position + t.rotation * center, t.rotation, size);
             }
         }
 
@@ -114,9 +119,9 @@ namespace Sim.Sensors.Vision {
                 GameObject obj = kvp.Key;
                 string id = kvp.Value;
 
-                ComputeLocalBounds(obj, out Vector3 localCenter, out Vector3 localSize);
+                ComputeBounds(obj, out Vector3 center, out Vector3 size);
 
-                Vector3 worldCenter = obj.transform.TransformPoint(localCenter);
+                Vector3 worldCenter = obj.transform.position + obj.transform.rotation * center;
 
                 Vector3 screenPoint = sensorCamera.WorldToViewportPoint(worldCenter);
                 bool visible =
@@ -130,22 +135,17 @@ namespace Sim.Sensors.Vision {
                 if (!visible || !inRange)
                     continue;
 
-                // Transform to camera frame
-                Vector3 cameraSpaceCenter =
-                    sensorCamera.transform.InverseTransformPoint(worldCenter);
+                // Box pose in the camera's axes (metric: no camera scale), then RUF -> FLU, the
+                // same conversion the TF tree uses for the camera frame itself.
+                Quaternion toCamera = Quaternion.Inverse(sensorCamera.transform.rotation);
+                Vector3 cameraSpaceCenter = toCamera * (worldCenter - sensorCamera.transform.position);
+                Quaternion cameraSpaceRotation = toCamera * obj.transform.rotation;
 
-                // Rotation in camera frame
-                Quaternion cameraSpaceRotation =
-                    Quaternion.Inverse(obj.transform.rotation) *
-                    sensorCamera.transform.rotation;
+                PoseMsg pose = new(cameraSpaceCenter.To<FLU>(), cameraSpaceRotation.To<FLU>());
+                // Extents along the box's own axes: Unity (right, up, forward) -> ROS (x=forward, y=left, z=up).
+                Vector3Msg rosSize = new(size.z, size.x, size.y);
 
-                // Convert to ROS
-                Vector3 rosPosition = UnityToROSPosition(cameraSpaceCenter);
-                Quaternion rosRotation = UnityToROSRotation(cameraSpaceRotation);
-
-                detections.Add(
-                    GenerateDetection(rosPosition, rosRotation, localSize, id)
-                );
+                detections.Add(GenerateDetection(pose, rosSize, id));
             }
 
             return new Detection3DArrayMsg(
@@ -155,15 +155,9 @@ namespace Sim.Sensors.Vision {
         }
 
         private Detection3DMsg GenerateDetection(
-            Vector3 rosPosition,
-            Quaternion rosRotation,
-            Vector3 size,
+            PoseMsg pose,
+            Vector3Msg size,
             string id) {
-            PoseMsg pose = new(
-                new PointMsg(rosPosition.x, rosPosition.y, rosPosition.z),
-                new QuaternionMsg(rosRotation.x, rosRotation.y, rosRotation.z, rosRotation.w)
-            );
-
             double[] covariance = new double[36];
 
             ObjectHypothesisWithPoseMsg hypothesis =
@@ -172,10 +166,7 @@ namespace Sim.Sensors.Vision {
                     new PoseWithCovarianceMsg(pose, covariance)
                 );
 
-            BoundingBox3DMsg bbox = new(
-                pose,
-                new Vector3Msg(size.x, size.y, size.z)
-            );
+            BoundingBox3DMsg bbox = new(pose, size);
 
             return new Detection3DMsg(
                 publisher.CreateHeader(),
@@ -185,7 +176,13 @@ namespace Sim.Sensors.Vision {
             );
         }
 
-        private void ComputeLocalBounds(
+        /// <summary>
+        /// Box around all of <paramref name="obj"/>'s renderers, aligned with the object's axes and in
+        /// metres (every renderer's corners go through its own full transform, so scale and rotation
+        /// anywhere in the hierarchy are accounted for). <paramref name="center"/> is the offset from
+        /// the object's pivot in its axes; world centre = position + rotation * center.
+        /// </summary>
+        private static void ComputeBounds(
             GameObject obj,
             out Vector3 center,
             out Vector3 size) {
@@ -197,42 +194,24 @@ namespace Sim.Sensors.Vision {
                 return;
             }
 
-            bool initialized = false;
-            Vector3 min = Vector3.zero;
-            Vector3 max = Vector3.zero;
+            Quaternion toObject = Quaternion.Inverse(obj.transform.rotation);
+            Vector3 origin = obj.transform.position;
+            Vector3 min = Vector3.positiveInfinity;
+            Vector3 max = Vector3.negativeInfinity;
 
             foreach (var r in renderers) {
                 Bounds b = r.localBounds;
-
-                Vector3 worldCenter = r.transform.TransformPoint(b.center);
-                Vector3 localCenter = obj.transform.InverseTransformPoint(worldCenter);
-
-                Vector3 extents = Vector3.Scale(b.extents, r.transform.lossyScale);
-
-                Vector3 localMin = localCenter - extents;
-                Vector3 localMax = localCenter + extents;
-
-                if (!initialized) {
-                    min = localMin;
-                    max = localMax;
-                    initialized = true;
-                }
-                else {
-                    min = Vector3.Min(min, localMin);
-                    max = Vector3.Max(max, localMax);
+                for (int i = 0; i < 8; i++) {
+                    Vector3 corner = b.center + Vector3.Scale(b.extents, new Vector3(
+                        (i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                    Vector3 p = toObject * (r.transform.TransformPoint(corner) - origin);
+                    min = Vector3.Min(min, p);
+                    max = Vector3.Max(max, p);
                 }
             }
 
             center = (min + max) * 0.5f;
             size = max - min;
-        }
-
-        private Vector3 UnityToROSPosition(Vector3 unityPos) {
-            return new Vector3(unityPos.x, unityPos.z, unityPos.y);
-        }
-
-        private Quaternion UnityToROSRotation(Quaternion unityRot) {
-            return Quaternion.AngleAxis(-90f, Vector3.forward) * Quaternion.AngleAxis(-90f, Vector3.up) * Quaternion.AngleAxis(-90f, Vector3.forward) * unityRot;
         }
     }
 }
