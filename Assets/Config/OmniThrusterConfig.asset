@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbf3f7797a55db8de9313ce5b9fdd7f9, type: 3}
   m_Name: OmniThrusterConfig
   m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ThrusterConfig
-  <thrustK>k__BackingField: -0.014
+  <thrustK>k__BackingField: -1.0
   <backK>k__BackingField: 1
   <height>k__BackingField: 0.03
   <controlMode>k__BackingField: 0

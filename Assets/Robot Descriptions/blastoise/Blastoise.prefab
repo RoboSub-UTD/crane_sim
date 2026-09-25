@@ -1920,6 +1920,7 @@ GameObject:
   - component: {fileID: 6659781381358495525}
   - component: {fileID: 8276555061911205369}
   - component: {fileID: 8331884704071894688}
+  - component: {fileID: 5518920341176330264}
   m_Layer: 0
   m_Name: Blastoise
   m_TagString: robot
@@ -1927,6 +1928,34 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &5518920341176330264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2192760388070078231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4632fef66f564eebb6dd66cb4a1f9567, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.TransformTreePublisher
+  topicName: /tf
+  Hz: 50
+  baseFrameId: base_link
+  baseLink: {fileID: 8763587276732716985}
+  baseFrameRotation: {x: 0, y: -90, z: 0}
+  sensorFrames:
+  - frameId: imu_link
+    source: {fileID: 4441030106483710704}
+  - frameId: gps_link
+    source: {fileID: 8609486237206330500}
+  - frameId: lidar_link
+    source: {fileID: 4981493672561120323}
+  - frameId: front_camera_link
+    source: {fileID: 1124875459242486217}
+  zedCamera: {fileID: 4271350967731102918}
+  zedCameraName: zed
 --- !u!4 &6659781381358495525
 Transform:
   m_ObjectHideFlags: 0
@@ -3348,27 +3377,27 @@ MonoBehaviour:
   waterSurface: {fileID: 0}
   debug: 0
 --- !u!1 &3778515348648561578
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4981493672561120323}
-  - component: {fileID: 7540532052364479766}
-  - component: {fileID: 8456486705529259454}
-  - component: {fileID: 8091342147614376626}
-  - component: {fileID: 7964816976761655757}
-  - component: {fileID: 1834016212954740347}
-  - component: {fileID: 3042137074771484436}
-  m_Layer: 0
-  m_Name: lidar_link
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
+	GameObject:
+	  m_ObjectHideFlags: 0
+	  m_CorrespondingSourceObject: {fileID: 0}
+	  m_PrefabInstance: {fileID: 0}
+	  m_PrefabAsset: {fileID: 0}
+	  serializedVersion: 6
+	  m_Component:
+	  - component: {fileID: 4981493672561120323}
+	  - component: {fileID: 7540532052364479766}
+	  - component: {fileID: 8456486705529259454}
+	  - component: {fileID: 8091342147614376626}
+	  - component: {fileID: 7964816976761655757}
+	  - component: {fileID: 1834016212954740347}
+	  - component: {fileID: 3042137074771484436}
+	  m_Layer: 0
+	  m_Name: lidar_link
+	  m_TagString: Untagged
+	  m_Icon: {fileID: 0}
+	  m_NavMeshLayer: 0
+	  m_StaticEditorFlags: 0
+	  m_IsActive: 1
 --- !u!4 &4981493672561120323
 Transform:
   m_ObjectHideFlags: 0
@@ -4446,7 +4475,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4693042776900118673}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d77e831c11d024bbe8b15953d3d910b0, type: 3}
   m_Name: 
@@ -5642,7 +5671,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6845916185526941729}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ea4339cbf971ef49821d367c0176a97, type: 3}
   m_Name: 

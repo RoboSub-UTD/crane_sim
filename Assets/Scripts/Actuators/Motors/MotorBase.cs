@@ -52,7 +52,12 @@ namespace Sim.Actuators.Motors {
                 Debug.LogWarning($"{name}: Swapped min/max angles because min > max");
             }
 
-            config ??= Activator.CreateInstance<TConfig>();
+            if (config == null) {
+                if (typeof(ScriptableObject).IsAssignableFrom(typeof(TConfig)))
+                    config = (TConfig)(object)ScriptableObject.CreateInstance(typeof(TConfig));
+                else
+                    config = Activator.CreateInstance<TConfig>();
+            }
 
             SetMotorDefaults();
         }
