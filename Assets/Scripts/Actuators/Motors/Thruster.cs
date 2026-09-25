@@ -35,7 +35,7 @@ namespace Sim.Actuators.Motors {
 
             float velocity = base.GetVelocity();
             Vector3 forceDirection = rootBody.transform.TransformDirection(transform.localRotation * localAxis);
-            Vector3 force = Mathf.Sign(velocity) * (velocity * velocity) * thrustK * forceDirection;
+            Vector3 force = velocity * thrustK * forceDirection;
             force *= Mathf.Sign(velocity) < 0 ? backK : 1;
             force *= submersionFraction;
             rootBody.AddForceAtPosition(force, body.transform.position);
