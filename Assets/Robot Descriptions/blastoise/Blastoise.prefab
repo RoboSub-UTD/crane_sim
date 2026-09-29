@@ -1132,7 +1132,7 @@ ArticulationBody:
     targetVelocity: 0
     driveType: 0
   m_LinearDamping: 4
-  m_AngularDamping: 15
+  m_AngularDamping: 1
   m_JointFriction: 0.05
   m_CenterOfMass: {x: -0, y: -0.23, z: 0}
   m_InertiaTensor: {x: 0.001, y: 0.001, z: 0.001}
@@ -1701,6 +1701,8 @@ GameObject:
   - component: {fileID: 4106283656128392726}
   - component: {fileID: 5858001847264222573}
   - component: {fileID: 1716557009470573258}
+  - component: {fileID: 2401765411473947150}
+  - component: {fileID: 7847788518637510308}
   m_Layer: 0
   m_Name: rear_left_propeller_link
   m_TagString: Untagged
@@ -1845,7 +1847,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2086102411953065473}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: caae675110df5606b8df61135209ef53, type: 3}
   m_Name: 
@@ -1855,6 +1857,47 @@ MonoBehaviour:
   debugCommand: 0
   waterSurface: {fileID: 0}
   debug: 0
+--- !u!114 &2401765411473947150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2086102411953065473}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 623b2163d555813a3a7e593691f50f02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSThruster
+  config: {fileID: 11400000, guid: ef219c004fcf17a6da0d198cf8179fae, type: 2}
+  useDebugCommand: 0
+  debugCommand: 0
+  waterSurface: {fileID: 0}
+  debug: 0
+  topicName: /thruster_commands
+  position: 2
+--- !u!114 &7847788518637510308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2086102411953065473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66dacba6faee3c5d0a1aeb4713cbcf51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSKinThruster
+  topicName: /thruster_commands
+  position: 1
+  invertThrustDirection: 1
+  maxThrustForceN: 50
+  backK: 0.8
+  forcePoint: {fileID: 0}
+  propellerMesh: {fileID: 0}
+  maxVisualRPM: 1200
+  rotationAxis: 2
+  showDebugRay: 1
 --- !u!1 &2115418010349898542
 GameObject:
   m_ObjectHideFlags: 0
@@ -1928,34 +1971,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &5518920341176330264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2192760388070078231}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4632fef66f564eebb6dd66cb4a1f9567, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.TransformTreePublisher
-  topicName: /tf
-  Hz: 50
-  baseFrameId: base_link
-  baseLink: {fileID: 8763587276732716985}
-  baseFrameRotation: {x: 0, y: -90, z: 0}
-  sensorFrames:
-  - frameId: imu_link
-    source: {fileID: 4441030106483710704}
-  - frameId: gps_link
-    source: {fileID: 8609486237206330500}
-  - frameId: lidar_link
-    source: {fileID: 4981493672561120323}
-  - frameId: front_camera_link
-    source: {fileID: 1124875459242486217}
-  zedCamera: {fileID: 4271350967731102918}
-  zedCameraName: zed
 --- !u!4 &6659781381358495525
 Transform:
   m_ObjectHideFlags: 0
@@ -2011,6 +2026,24 @@ MonoBehaviour:
   torque: 100
   acceleration: 5
   highLightColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &5518920341176330264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2192760388070078231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7356e8f304134d9a8b11b6a8d63f2b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SensorsAssembly::Sim.Sensors.TransformTreePublisher
+  topicName: /tf
+  Hz: 50
+  baseFrameId: base_link
+  baseLink: {fileID: 0}
+  baseFrameRotation: {x: 0, y: -90, z: 0}
+  sensorFrames: []
 --- !u!1 &2307785695586734081
 GameObject:
   m_ObjectHideFlags: 0
@@ -3222,6 +3255,8 @@ GameObject:
   - component: {fileID: 8119642564622709012}
   - component: {fileID: 1536598056245381936}
   - component: {fileID: 2855072258681580678}
+  - component: {fileID: 7461729366443307548}
+  - component: {fileID: 7038435384785813378}
   m_Layer: 0
   m_Name: rear_right_propeller_link
   m_TagString: Untagged
@@ -3366,7 +3401,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3742857257110263301}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: caae675110df5606b8df61135209ef53, type: 3}
   m_Name: 
@@ -3376,28 +3411,69 @@ MonoBehaviour:
   debugCommand: 0
   waterSurface: {fileID: 0}
   debug: 0
+--- !u!114 &7461729366443307548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3742857257110263301}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 623b2163d555813a3a7e593691f50f02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSThruster
+  config: {fileID: 11400000, guid: ef219c004fcf17a6da0d198cf8179fae, type: 2}
+  useDebugCommand: 0
+  debugCommand: 0
+  waterSurface: {fileID: 0}
+  debug: 0
+  topicName: /thruster_commands
+  position: 3
+--- !u!114 &7038435384785813378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3742857257110263301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66dacba6faee3c5d0a1aeb4713cbcf51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSKinThruster
+  topicName: /thruster_commands
+  position: 3
+  invertThrustDirection: 1
+  maxThrustForceN: 50
+  backK: 0.8
+  forcePoint: {fileID: 0}
+  propellerMesh: {fileID: 0}
+  maxVisualRPM: 1200
+  rotationAxis: 2
+  showDebugRay: 1
 --- !u!1 &3778515348648561578
-	GameObject:
-	  m_ObjectHideFlags: 0
-	  m_CorrespondingSourceObject: {fileID: 0}
-	  m_PrefabInstance: {fileID: 0}
-	  m_PrefabAsset: {fileID: 0}
-	  serializedVersion: 6
-	  m_Component:
-	  - component: {fileID: 4981493672561120323}
-	  - component: {fileID: 7540532052364479766}
-	  - component: {fileID: 8456486705529259454}
-	  - component: {fileID: 8091342147614376626}
-	  - component: {fileID: 7964816976761655757}
-	  - component: {fileID: 1834016212954740347}
-	  - component: {fileID: 3042137074771484436}
-	  m_Layer: 0
-	  m_Name: lidar_link
-	  m_TagString: Untagged
-	  m_Icon: {fileID: 0}
-	  m_NavMeshLayer: 0
-	  m_StaticEditorFlags: 0
-	  m_IsActive: 1
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4981493672561120323}
+  - component: {fileID: 8456486705529259454}
+  - component: {fileID: 1834016212954740347}
+  - component: {fileID: 3042137074771484436}
+  - component: {fileID: 7540532052364479766}
+  - component: {fileID: 7964816976761655757}
+  - component: {fileID: 8091342147614376626}
+  m_Layer: 0
+  m_Name: 
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!4 &4981493672561120323
 Transform:
   m_ObjectHideFlags: 0
@@ -3415,19 +3491,6 @@ Transform:
   - {fileID: 2147893862838918809}
   m_Father: {fileID: 7155249216408790572}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7540532052364479766
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3778515348648561578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fba5fd74d37a6cf4284698624eb8f6aa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfLink
-  IsBaseLink: 0
 --- !u!171741748 &8456486705529259454
 ArticulationBody:
   m_ObjectHideFlags: 0
@@ -3494,40 +3557,6 @@ ArticulationBody:
   m_Immovable: 0
   m_UseGravity: 1
   m_CollisionDetectionMode: 0
---- !u!114 &8091342147614376626
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3778515348648561578}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7631001c063f69d4495bca90731abab2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfInertial
-  displayInertiaGizmo: 0
-  useUrdfData: 1
-  centerOfMass: {x: 0.0001, y: -0.00111, z: 0.00004}
-  inertiaTensor: {x: 0.000118377204, y: 0.00017000003, z: 0.00018162275}
-  inertiaTensorRotation: {x: -0.21723132, y: -0.672912, z: -0.672912, w: -0.21723132}
-  inertialAxisRotation: {x: 0, y: 0, z: 0, w: 1}
---- !u!114 &7964816976761655757
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3778515348648561578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 074632cab556f5b408839af8574308df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfJointFixed
-  xAxis: 0
-  jointName: lidar_joint
-  EffortLimit: 1000
-  VelocityLimit: 1000
 --- !u!114 &1834016212954740347
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3573,6 +3602,53 @@ MonoBehaviour:
   topicName: points
   frameId: lidar_link
   Hz: 10
+--- !u!114 &7540532052364479766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3778515348648561578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fba5fd74d37a6cf4284698624eb8f6aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfLink
+  IsBaseLink: 0
+--- !u!114 &7964816976761655757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3778515348648561578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 074632cab556f5b408839af8574308df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfJointFixed
+  xAxis: 0
+  jointName: lidar_joint
+  EffortLimit: 1000
+  VelocityLimit: 1000
+--- !u!114 &8091342147614376626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3778515348648561578}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7631001c063f69d4495bca90731abab2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Robotics.UrdfImporter::Unity.Robotics.UrdfImporter.UrdfInertial
+  displayInertiaGizmo: 0
+  useUrdfData: 1
+  centerOfMass: {x: 0.0001, y: -0.00111, z: 0.00004}
+  inertiaTensor: {x: 0.000118377204, y: 0.00017000003, z: 0.00018162275}
+  inertiaTensorRotation: {x: -0.21723132, y: -0.672912, z: -0.672912, w: -0.21723132}
+  inertialAxisRotation: {x: 0, y: 0, z: 0, w: 1}
 --- !u!1 &3841879332025144327
 GameObject:
   m_ObjectHideFlags: 0
@@ -3675,6 +3751,8 @@ GameObject:
   - component: {fileID: 6885590817277568107}
   - component: {fileID: 996963511321884433}
   - component: {fileID: 8630150739638686065}
+  - component: {fileID: 2658033830791721451}
+  - component: {fileID: 5583169723619935629}
   m_Layer: 0
   m_Name: front_right_propeller_link
   m_TagString: Untagged
@@ -3819,7 +3897,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4113120035386283078}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: caae675110df5606b8df61135209ef53, type: 3}
   m_Name: 
@@ -3829,6 +3907,47 @@ MonoBehaviour:
   debugCommand: 0
   waterSurface: {fileID: 0}
   debug: 0
+--- !u!114 &2658033830791721451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4113120035386283078}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 623b2163d555813a3a7e593691f50f02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSThruster
+  config: {fileID: 11400000, guid: ef219c004fcf17a6da0d198cf8179fae, type: 2}
+  useDebugCommand: 0
+  debugCommand: 0
+  waterSurface: {fileID: 0}
+  debug: 0
+  topicName: /thruster_commands
+  position: 1
+--- !u!114 &5583169723619935629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4113120035386283078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66dacba6faee3c5d0a1aeb4713cbcf51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSKinThruster
+  topicName: /thruster_commands
+  position: 2
+  invertThrustDirection: 1
+  maxThrustForceN: 50
+  backK: 0.8
+  forcePoint: {fileID: 0}
+  propellerMesh: {fileID: 0}
+  maxVisualRPM: 1200
+  rotationAxis: 2
+  showDebugRay: 1
 --- !u!1 &4237908998229292491
 GameObject:
   m_ObjectHideFlags: 0
@@ -4596,6 +4715,8 @@ GameObject:
   - component: {fileID: 7056775340139677920}
   - component: {fileID: 67252286394965618}
   - component: {fileID: 4261921784973079089}
+  - component: {fileID: 1529555870229870928}
+  - component: {fileID: 1986220974028107489}
   m_Layer: 0
   m_Name: front_left_propeller_link
   m_TagString: Untagged
@@ -4740,7 +4861,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5325575762777009155}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: caae675110df5606b8df61135209ef53, type: 3}
   m_Name: 
@@ -4750,6 +4871,47 @@ MonoBehaviour:
   debugCommand: 0
   waterSurface: {fileID: 0}
   debug: 0
+--- !u!114 &1529555870229870928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5325575762777009155}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 623b2163d555813a3a7e593691f50f02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSThruster
+  config: {fileID: 11400000, guid: ef219c004fcf17a6da0d198cf8179fae, type: 2}
+  useDebugCommand: 0
+  debugCommand: 0
+  waterSurface: {fileID: 0}
+  debug: 0
+  topicName: /thruster_commands
+  position: 0
+--- !u!114 &1986220974028107489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5325575762777009155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66dacba6faee3c5d0a1aeb4713cbcf51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MotorsAssembly::Sim.Actuators.Motors.ROSKinThruster
+  topicName: /thruster_commands
+  position: 0
+  invertThrustDirection: 1
+  maxThrustForceN: 50
+  backK: 0.8
+  forcePoint: {fileID: 0}
+  propellerMesh: {fileID: 0}
+  maxVisualRPM: 1200
+  rotationAxis: 2
+  showDebugRay: 1
 --- !u!1 &5342036666153672700
 GameObject:
   m_ObjectHideFlags: 0
@@ -5101,6 +5263,8 @@ MonoBehaviour:
   frameId: front_camera_link
   sensorCamera: {fileID: 7252236208909801342}
   Hz: 10
+  minDist: 1
+  maxDist: 20
   drawGizmos: 1
   gizmoScale: 0.05
   objects:
@@ -5136,6 +5300,8 @@ MonoBehaviour:
   serialNumber: 0
   bitrateKbps: 0
   verboseStreamer: 0
+  logGroundTruthDepth: 0
+  groundTruthInterval: 2
   ingestHighRateImu: 0
 --- !u!1 &6382777769473952513
 GameObject:
@@ -6161,7 +6327,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7597670358607897310}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.65328205, y: 0.6532797, z: -0.27060002, w: 0.27059904}
+  m_LocalRotation: {x: -0.6532815, y: 0.6532815, z: -0.27059805, w: 0.27059805}
   m_LocalPosition: {x: -0.26636, y: -0.28432, z: 0.012870014}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6170,7 +6336,7 @@ Transform:
   - {fileID: 7926539411762292665}
   - {fileID: 8537436552406053090}
   m_Father: {fileID: 4980675445901136799}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 135, z: -90}
 --- !u!114 &8685185190104917110
 MonoBehaviour:
   m_ObjectHideFlags: 0

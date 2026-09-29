@@ -8,9 +8,9 @@ using Unity.Robotics.ROSTCPConnector.MessageGeneration;
 namespace RosMessageTypes.GalaxseaInterfaces
 {
     [Serializable]
-    public class ThrusterCommandMsg : Message
+    public class ThrusterCommandsMsg : Message
     {
-        public const string k_RosMessageName = "galaxsea_interfaces/ThrusterCommand";
+        public const string k_RosMessageName = "galaxsea_interfaces/ThrusterCommands";
         public override string RosMessageName => k_RosMessageName;
 
         public double front_left;
@@ -18,7 +18,7 @@ namespace RosMessageTypes.GalaxseaInterfaces
         public double back_left;
         public double back_right;
 
-        public ThrusterCommandMsg()
+        public ThrusterCommandsMsg()
         {
             this.front_left = 0.0;
             this.front_right = 0.0;
@@ -26,7 +26,7 @@ namespace RosMessageTypes.GalaxseaInterfaces
             this.back_right = 0.0;
         }
 
-        public ThrusterCommandMsg(double front_left, double front_right, double back_left, double back_right)
+        public ThrusterCommandsMsg(double front_left, double front_right, double back_left, double back_right)
         {
             this.front_left = front_left;
             this.front_right = front_right;
@@ -34,9 +34,9 @@ namespace RosMessageTypes.GalaxseaInterfaces
             this.back_right = back_right;
         }
 
-        public static ThrusterCommandMsg Deserialize(MessageDeserializer deserializer) => new ThrusterCommandMsg(deserializer);
+        public static ThrusterCommandsMsg Deserialize(MessageDeserializer deserializer) => new ThrusterCommandsMsg(deserializer);
 
-        private ThrusterCommandMsg(MessageDeserializer deserializer)
+        private ThrusterCommandsMsg(MessageDeserializer deserializer)
         {
             deserializer.Read(out this.front_left);
             deserializer.Read(out this.front_right);
@@ -54,7 +54,7 @@ namespace RosMessageTypes.GalaxseaInterfaces
 
         public override string ToString()
         {
-            return "ThrusterCommandMsg: " +
+            return "ThrusterCommandsMsg: " +
             "\nfront_left: " + front_left.ToString() +
             "\nfront_right: " + front_right.ToString() +
             "\nback_left: " + back_left.ToString() +
