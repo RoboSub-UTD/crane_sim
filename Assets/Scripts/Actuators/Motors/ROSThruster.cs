@@ -20,10 +20,10 @@ namespace Sim.Actuators.Motors {
             base.Awake();
 
             ros = ROSConnection.GetOrCreateInstance();
-            ros.Subscribe<ThrusterCommandMsg>(topicName, CommandCallback);
+            ros.Subscribe<ThrusterCommandsMsg>(topicName, CommandCallback);
         }
 
-        private void CommandCallback(ThrusterCommandMsg msg) {
+        private void CommandCallback(ThrusterCommandsMsg msg) {
             float command = position switch {
                 ThrusterPosition.FrontLeft => (float)msg.front_left,
                 ThrusterPosition.FrontRight => (float)msg.front_right,
