@@ -2041,9 +2041,17 @@ MonoBehaviour:
   topicName: /tf
   Hz: 50
   baseFrameId: base_link
-  baseLink: {fileID: 0}
+  baseLink: {fileID: 8763587276732716985}
   baseFrameRotation: {x: 0, y: -90, z: 0}
-  sensorFrames: []
+  sensorFrames:
+  - frameId: imu_link
+    source: {fileID: 4441030106483710704}
+  - frameId: gps_link
+    source: {fileID: 8609486237206330500}
+  - frameId: lidar_link
+    source: {fileID: 4981493672561120323}
+  - frameId: front_camera_link
+    source: {fileID: 3584964216127979938}
 --- !u!1 &2307785695586734081
 GameObject:
   m_ObjectHideFlags: 0
