@@ -1,54 +1,28 @@
 using System;
 using UnityEngine;
+using RosMessageTypes.BuiltinInterfaces;
 
 namespace Sim.Utils.ROS {
     public static class Clock {
         // Since UnityScaled is the default Unity Time mode, we'll use that for this project
         // None of the other time modes are fully validated and guaranteed to be without issues
         public enum ClockMode {
-            // Time delta scaled by simulation speed to the start of the current frame, since the beginning of the game
+            // Time delta scaled by simulation speed to the start of the current frame, since the beginning of the game.
+            // Inside FixedUpdate this is the start of the current physics step (Time.fixedTimeAsDouble).
             UnityScaled,
-            // Real time delta to the exact moment this function is called, since beginning of the game
-            // UnityUnscaled,
-            // Real time delta since the Unix Epoch (1/1/1970 @ midnight)
-            // UnixEpoch,
             // Examples of other potentially useful clock modes...
-            // UnixEpochUtc,
-            // DateTimeNow,
-            // DateTimeNowUtc,
-            // ExternalClock
+            // UnityUnscaled, UnixEpoch, UnixEpochUtc, DateTimeNow, DateTimeNowUtc, ExternalClock
         }
 
         public const double k_NanoSecondsInSeconds = 1e9;
 
-        static readonly DateTime k_UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-        // Time the application started, relative to Unix Epoch
-        static readonly double k_StartTimeEpochSeconds = SecondsSinceUnixEpoch - Time.realtimeSinceStartupAsDouble;
-
-        static double SecondsSinceUnixEpoch => (DateTime.Now - k_UnixEpoch).TotalSeconds;
-        static double UnityUnscaledTimeSinceFrameStart =>
-            Time.realtimeSinceStartupAsDouble - Time.unscaledTimeAsDouble;
-
-        public static double TimeSinceFrameStart => Now - FrameStartTimeInSeconds;
-
+        // Sim time of the current frame, or of the current physics step when called from FixedUpdate.
+        // This is the only time base used for both /clock and message header stamps, so a stamp can
+        // never be ahead of the /clock that ROSClock has already published (ROSClock runs first).
         public static double FrameStartTimeInSeconds {
             get {
                 return Mode switch {
-                    // This might be an approximation... needs testing.
                     ClockMode.UnityScaled => Time.timeAsDouble,
-                    // ClockMode.UnityUnscaled => Time.unscaledTimeAsDouble,
-                    // ClockMode.UnixEpoch => k_StartTimeEpochSeconds + UnityUnscaledTimeSinceFrameStart,
-                    _ => throw new NotImplementedException()
-                };
-            }
-        }
-
-        public static double NowTimeInSeconds {
-            get {
-                return Mode switch {
-                    ClockMode.UnityScaled => Time.timeAsDouble + UnityUnscaledTimeSinceFrameStart * Time.timeScale,
-                    // ClockMode.UnityUnscaled => Time.realtimeSinceStartupAsDouble,
-                    // ClockMode.UnixEpoch => SecondsSinceUnixEpoch,
                     _ => throw new NotImplementedException()
                 };
             }
@@ -67,26 +41,15 @@ namespace Sim.Utils.ROS {
         public static ClockMode Mode = ClockMode.UnityScaled;
 
         // Simple interfaces for supporting commonly used vocabulary
-        public static double Now => NowTimeInSeconds;
         public static double time => FrameStartTimeInSeconds;
         public static float deltaTime => DeltaTimeInSeconds;
 
-        // WARNING: These functions could potentially mess up threaded access to this clock class.
-        //          Would need to include some mutex locking to keep these calls thread-safe
-        public static double GetFrameTime(ClockMode temporaryMode) {
-            var originalMode = Mode;
-            Mode = temporaryMode;
-            var t = FrameStartTimeInSeconds;
-            Mode = originalMode;
-            return t;
-        }
-
-        public static double GetNowTime(ClockMode temporaryMode) {
-            var originalMode = Mode;
-            Mode = temporaryMode;
-            var t = NowTimeInSeconds;
-            Mode = originalMode;
-            return t;
+        public static TimeMsg ToTimeMsg(double seconds) {
+            double whole = Math.Floor(seconds);
+            return new TimeMsg {
+                sec = (int)whole,
+                nanosec = (uint)((seconds - whole) * k_NanoSecondsInSeconds)
+            };
         }
     }
 }

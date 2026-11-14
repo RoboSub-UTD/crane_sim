@@ -1,4 +1,5 @@
 using RosMessageTypes.Sensor;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Unity.Robotics.ROSTCPConnector.MessageGeneration;
@@ -16,6 +17,9 @@ namespace Sim.Sensors.Vision {
 
         private Texture2D rgbTexture2D;
         private float timeSincePublish = 0.0f;
+        // Sim time at which each pending readback was requested (readbacks complete in request order)
+        private readonly Queue<double> pendingStamps = new();
+        private double readbackStamp;
 
         private void Awake() {
             if (sensorCamera == null) {
@@ -33,7 +37,7 @@ namespace Sim.Sensors.Vision {
         }
 
         public ImageMsg CreateMessage() {
-            return rgbTexture2D.ToImageMsg(publisher.CreateHeader());
+            return rgbTexture2D.ToImageMsg(publisher.CreateHeader(readbackStamp));
         }
 
         private void FixedUpdate() {
@@ -45,10 +49,12 @@ namespace Sim.Sensors.Vision {
         }
 
         private void RequestReadback(RenderTexture targetTexture) {
+            pendingStamps.Enqueue(Clock.time);
             AsyncGPUReadback.Request(targetTexture, 0, TextureFormat.RGB24, OnReadbackComplete);
         }
 
         private void OnReadbackComplete(AsyncGPUReadbackRequest request) {
+            readbackStamp = pendingStamps.Count > 0 ? pendingStamps.Dequeue() : Clock.time;
             if (request.hasError) {
                 Debug.LogWarning("Failed to read back texture once");
                 return;

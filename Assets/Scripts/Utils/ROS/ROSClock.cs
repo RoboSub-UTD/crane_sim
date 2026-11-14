@@ -1,24 +1,19 @@
-using System;
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
-using RosMessageTypes.BuiltinInterfaces;
 using RosMessageTypes.Rosgraph;
 
 namespace Sim.Utils.ROS {
+    // Runs before every other script so that, within each physics step and each frame, /clock is
+    // published before any sensor stamps a message with that same sim time.
+    [DefaultExecutionOrder(-1000)]
     public class ROSClock : MonoBehaviour {
         [SerializeField] private Clock.ClockMode clockMode;
 
         [SerializeField, HideInInspector] private Clock.ClockMode lastSetClockMode;
 
-        [SerializeField] private double publishRateHz = 100f;
-
-        private double lastPublishTimeSeconds;
+        private double lastPublishTimeSeconds = double.NegativeInfinity;
 
         ROSConnection ros;
-
-        private double PublishPeriodSeconds => 1.0f / publishRateHz;
-
-        private bool ShouldPublishMessage => Clock.FrameStartTimeInSeconds - PublishPeriodSeconds > lastPublishTimeSeconds;
 
         private void OnValidate() {
             var clocks = FindObjectsByType<ROSClock>(FindObjectsSortMode.None);
@@ -39,27 +34,23 @@ namespace Sim.Utils.ROS {
             lastSetClockMode = mode;
         }
 
-        // Start is called before the first frame update
-        private void Start() {
+        private void Awake() {
             SetClockMode(clockMode);
             ros = ROSConnection.GetOrCreateInstance();
             ros.RegisterPublisher<ClockMsg>("clock");
         }
 
-        private void PublishMessage() {
+        // Publish whenever sim time has advanced. Called at the start of every physics step (fixedTime)
+        // and every frame (time); the monotonic guard keeps /clock from ever stepping backwards.
+        private void PublishIfAdvanced() {
             var publishTime = Clock.time;
-            var clockMsg = new TimeMsg {
-                sec = (int)publishTime,
-                nanosec = (uint)((publishTime - Math.Floor(publishTime)) * Clock.k_NanoSecondsInSeconds)
-            };
+            if (publishTime <= lastPublishTimeSeconds) return;
             lastPublishTimeSeconds = publishTime;
-            ros.Publish("clock", clockMsg);
+            ros.Publish("clock", new ClockMsg(Clock.ToTimeMsg(publishTime)));
         }
 
-        private void Update() {
-            if (ShouldPublishMessage) {
-                PublishMessage();
-            }
-        }
+        private void FixedUpdate() => PublishIfAdvanced();
+
+        private void Update() => PublishIfAdvanced();
     }
 }
