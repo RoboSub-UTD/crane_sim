@@ -13,7 +13,7 @@ namespace Sim.Utils.ROS {
         public bool manualPublish;
 
         private ROSConnection ros;
-        private float time;
+        private double timeSincePublish;
 
         private Func<object> createMessage;
         private Action<string, object> publishTyped;
@@ -53,10 +53,15 @@ namespace Sim.Utils.ROS {
             if (manualPublish) return;
             if (createMessage == null) return;
 
-            time += Time.fixedDeltaTime;
-            if (time >= 1f / Hz) {
+            // Carry the remainder over instead of resetting to 0, otherwise float rounding adds an extra
+            // physics step per period (e.g. 10 Hz at 50 Hz physics became ~8.3 Hz).
+            double period = 1.0 / Hz;
+            timeSincePublish += Time.fixedDeltaTime;
+            if (timeSincePublish >= period - 1e-6) {
                 Publish();
-                time = 0f;
+                timeSincePublish -= period;
+                // Don't burst-publish to catch up if the period is shorter than a physics step
+                if (timeSincePublish >= period) timeSincePublish = 0.0;
             }
         }
 
@@ -64,14 +69,14 @@ namespace Sim.Utils.ROS {
             publishTyped(topicName, createMessage());
         }
 
-        public HeaderMsg CreateHeader() {
-            var header = new HeaderMsg { frame_id=frameId };
-            var publishTime = Clock.Now;
-            var sec = publishTime;
-            var nanosec = (publishTime - Math.Floor(publishTime)) * Clock.k_NanoSecondsInSeconds;
-            header.stamp.sec = (int)sec;
-            header.stamp.nanosec = (uint)nanosec;
-            return header;
+        // Stamps with the current sim time (the physics step's time when called from FixedUpdate),
+        // which ROSClock has already published on /clock. Pass stampSeconds to stamp data that was
+        // captured earlier, e.g. an async GPU readback.
+        public HeaderMsg CreateHeader(double? stampSeconds = null) {
+            return new HeaderMsg {
+                frame_id = frameId,
+                stamp = Clock.ToTimeMsg(stampSeconds ?? Clock.time)
+            };
         }
     }
 }

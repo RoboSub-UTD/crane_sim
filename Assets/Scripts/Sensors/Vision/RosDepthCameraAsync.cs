@@ -1,5 +1,6 @@
 using RosMessageTypes.Sensor;
 using RosMessageTypes.Std;
+using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.Rendering;
@@ -22,6 +23,9 @@ namespace Sim.Sensors.Vision {
         private CameraDepthBake depthBakePass = new();
         private Texture2D depthTex2D;
         private float timeSincePublish = 0.0f;
+        // Sim time at which each pending readback was requested (readbacks complete in request order)
+        private readonly Queue<double> pendingStamps = new();
+        private double readbackStamp;
 
         private void Awake() {
             if (sensorCamera == null) {
@@ -46,7 +50,7 @@ namespace Sim.Sensors.Vision {
         }
 
         public ImageMsg CreateMessage() {
-            return GetDepthImageMsg(depthTex2D, publisher.CreateHeader());
+            return GetDepthImageMsg(depthTex2D, publisher.CreateHeader(readbackStamp));
         }
 
         private void FixedUpdate() {
@@ -58,10 +62,12 @@ namespace Sim.Sensors.Vision {
         }
 
         private void RequestReadback(RenderTexture targetTexture) {
+            pendingStamps.Enqueue(Clock.time);
             AsyncGPUReadback.Request(targetTexture, 0, TextureFormat.RFloat, OnReadbackComplete);
         }
 
         private void OnReadbackComplete(AsyncGPUReadbackRequest request) {
+            readbackStamp = pendingStamps.Count > 0 ? pendingStamps.Dequeue() : Clock.time;
             if (request.hasError) {
                 Debug.LogError("Failed to read back texture once");
                 return;
